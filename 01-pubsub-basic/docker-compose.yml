@@ -1,0 +1,38 @@
+services:
+
+  # ── ActiveMQ Classic broker ──────────────────────────────────────────────────
+  activemq:
+    image: apache/activemq-classic:5.18.4
+    container_name: activemq
+    ports:
+      - "61616:61616"   # JMS port
+      - "8161:8161"     # Web dashboard
+
+  # ── Consumer-A ───────────────────────────────────────────────────────────────
+  consumer-a:
+    build: consumer-a
+    container_name: consumer-a
+    environment:
+      - BROKER_URL=tcp://activemq:61616
+    restart: on-failure
+
+  # ── Consumer-B ───────────────────────────────────────────────────────────────
+  consumer-b:
+    build: consumer-b
+    container_name: consumer-b
+    environment:
+      - BROKER_URL=tcp://activemq:61616
+    restart: on-failure
+
+  # ── Producer ────────────────────────────────────────────────────────────────
+  producer:
+    build: producer
+    container_name: producer
+    depends_on:
+      consumer-a:
+        condition: service_started
+      consumer-b:
+        condition: service_started
+    environment:
+      - BROKER_URL=tcp://activemq:61616
+    restart: on-failure
