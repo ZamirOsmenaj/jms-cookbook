@@ -63,6 +63,12 @@ public class PublisherApp {
                 }
                 round++;
             }
+
+            // Give the broker a moment to confirm delivery and let Logback flush
+            // all buffered log lines before the JVM exits. Without this pause,
+            // the last "Published →" line can be dropped because the JVM shuts
+            // down before the log appender drains its internal buffer.
+            TimeUnit.MILLISECONDS.sleep(500);
         }
 
         log.info("=== Publisher finished ===");

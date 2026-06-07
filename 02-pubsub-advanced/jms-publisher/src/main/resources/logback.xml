@@ -1,4 +1,12 @@
 <configuration>
+    <!-- Ensure all log output is flushed before the JVM exits.
+         Without this, the last few log lines may be lost when the publisher
+         finishes and the JVM shuts down before Logback drains its buffers. -->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook">
+        <!-- Wait up to 2 seconds for any remaining log events to be written -->
+        <delay>2000</delay>
+    </shutdownHook>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%-10thread] %-5level %-35logger{35} - %msg%n</pattern>
