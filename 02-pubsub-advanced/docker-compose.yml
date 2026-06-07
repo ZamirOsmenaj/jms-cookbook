@@ -1,0 +1,33 @@
+services:
+
+  # ── ActiveMQ Classic broker ──────────────────────────────────────────────────
+  activemq:
+    image: apache/activemq-classic:5.18.3
+    container_name: activemq
+    ports:
+      - "61616:61616"   # JMS / OpenWire
+      - "8161:8161"     # Web console  →  http://localhost:8161  (admin/admin)
+    environment:
+      ACTIVEMQ_BROKER_NAME: localhost
+
+  # ── Publisher ────────────────────────────────────────────────────────────────
+  publisher:
+    build:
+      context: .
+      dockerfile: jms-publisher/Dockerfile
+    container_name: jms-publisher
+    environment:
+      BROKER_URL: tcp://activemq:61616
+      PUBLISH_INTERVAL_MS: "3000"         # seconds between messages
+      MAX_ROUNDS: "1"                     # -1 = loop forever
+    restart: on-failure
+
+  # ── Subscriber ───────────────────────────────────────────────────────────────
+  subscriber:
+    build:
+      context: .
+      dockerfile: jms-subscriber/Dockerfile
+    container_name: jms-subscriber
+    environment:
+      BROKER_URL: tcp://activemq:61616
+    restart: on-failure
