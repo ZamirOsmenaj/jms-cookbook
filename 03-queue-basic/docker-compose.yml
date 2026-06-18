@@ -1,0 +1,34 @@
+services:
+
+  activemq:
+    image: apache/activemq-classic:5.18.4
+    container_name: activemq
+    ports:
+      - "61616:61616"   # JMS transport port — Java clients connect here
+      - "8161:8161"     # Web admin console — open in browser to watch the queue
+
+  consumer-a:
+    build: ./consumer-a
+    container_name: consumer-a
+    environment:
+      - BROKER_URL=tcp://activemq:61616   # use the service name, not localhost
+    restart: on-failure
+
+  consumer-b:
+    build: ./consumer-b
+    container_name: consumer-b
+    environment:
+      - BROKER_URL=tcp://activemq:61616
+    restart: on-failure
+
+  producer:
+    build: ./producer
+    container_name: producer
+    depends_on:
+      consumer-a:
+        condition: service_started   # give consumers a head-start before sending
+      consumer-b:
+        condition: service_started
+    environment:
+      - BROKER_URL=tcp://activemq:61616
+    restart: on-failure
