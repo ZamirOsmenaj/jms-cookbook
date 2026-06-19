@@ -1,0 +1,76 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://activemq.apache.org/schema/core
+         http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <broker xmlns="http://activemq.apache.org/schema/core"
+            brokerName="queue-learning-broker"
+            dataDirectory="/var/activemq-data"
+            useJmx="true">
+
+        <!--
+            Destination Policies
+            =====================
+            For queues we configure:
+              - producerFlowControl: slow down producers if consumers can't keep up
+              - memoryLimit: per-queue memory budget
+              - Individual Dead-Letter Queue: failed messages go to DLQ.<queueName>
+                instead of the global ActiveMQ.DLQ — easier to monitor per queue
+        -->
+        <destinationPolicy>
+            <policyMap>
+                <policyEntries>
+                    <policyEntry queue=">" producerFlowControl="true" memoryLimit="20mb">
+                        <deadLetterStrategy>
+                            <!--
+                                individualDeadLetterStrategy sends failed messages to
+                                  DLQ.orders.queue  (instead of global ActiveMQ.DLQ)
+                                processExpired=true  → expired messages also land here
+                                processNonPersistent → catches non-persistent failures too
+                            -->
+                            <individualDeadLetterStrategy
+                                queuePrefix="DLQ."
+                                useQueueForQueueMessages="true"
+                                processExpired="true"
+                                processNonPersistent="true"/>
+                        </deadLetterStrategy>
+                    </policyEntry>
+                </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage percentOfJvmHeap="70"/>
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="500 mb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="100 mb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+
+        <persistenceAdapter>
+            <kahaDB directory="/var/activemq-data/kahadb"/>
+        </persistenceAdapter>
+
+        <transportConnectors>
+            <transportConnector name="openwire"
+                uri="tcp://0.0.0.0:61616?maximumConnections=50&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="amqp"
+                uri="amqp://0.0.0.0:5672?maximumConnections=50&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="stomp"
+                uri="stomp://0.0.0.0:61613?maximumConnections=50&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans"
+                  class="org.apache.activemq.hooks.SpringContextHook"/>
+        </shutdownHooks>
+    </broker>
+</beans>
