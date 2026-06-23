@@ -1,0 +1,69 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  JMS Queue (Point-to-Point) – Docker Compose
+#
+#  Services:
+#    broker    – Apache ActiveMQ 5.18 (JMS broker)
+#    producer  – Sends OrderRequest messages to orders.queue
+#    consumer  – 4 competing/selective consumers pulling from orders.queue
+#
+#  Usage:
+#    docker compose up --build
+#    docker compose logs -f consumer    # watch order processing
+#    docker compose logs -f producer    # watch order submission
+#
+#  ActiveMQ Console: http://localhost:8161  (admin/admin)
+#    → Queues → orders.queue   : see depth, consumers, throughput
+#    → Queues → DLQ.orders.queue : see failed/expired messages
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  broker:
+    image: apache/activemq-classic:5.18.3
+    container_name: activemq-queue-broker
+    hostname: broker
+    ports:
+      - "61616:61616"   # OpenWire (JMS)
+      - "8161:8161"     # Web Console
+      - "5672:5672"     # AMQP
+      - "61613:61613"   # STOMP
+    volumes:
+      - ./broker/activemq.xml:/opt/apache-activemq/conf/activemq.xml:ro
+      - activemq-data:/var/activemq-data
+    environment:
+      ACTIVEMQ_OPTS: "-Xmx512m -Xms256m"
+    networks:
+      - jms-queue-net
+
+  producer:
+    build:
+      context: .
+      dockerfile: producer/Dockerfile
+    container_name: jms-order-producer
+    environment:
+      BROKER_URL: "tcp://broker:61616"
+      PRODUCE_INTERVAL_MS: "2000"
+      MAX_ROUNDS: "1"
+    networks:
+      - jms-queue-net
+    restart: on-failure
+
+  consumer:
+    build:
+      context: .
+      dockerfile: consumer/Dockerfile
+    container_name: jms-order-consumer
+    environment:
+      BROKER_URL: "tcp://broker:61616"
+    networks:
+      - jms-queue-net
+    restart: on-failure
+
+volumes:
+  activemq-data:
+    name: activemq-queue-kahadb
+
+networks:
+  jms-queue-net:
+    name: jms-queue-network
+    driver: bridge
