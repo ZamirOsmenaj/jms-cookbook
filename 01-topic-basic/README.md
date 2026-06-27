@@ -71,7 +71,7 @@ In this project ActiveMQ runs as a Docker container. It exposes two ports:
 ## How this project is structured
 
 ```
-01-pubsub-basic/
+01-topic-basic/
 ├── docker-compose.yml          # Orchestrates all 4 containers
 ├── producer/
 │   ├── Dockerfile

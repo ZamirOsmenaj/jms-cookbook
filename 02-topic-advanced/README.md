@@ -1,11 +1,11 @@
 # JMS Demo — Advanced Pub/Sub with Apache ActiveMQ
 
-This project builds on `01-pubsub-basic` and demonstrates more realistic Pub/Sub
+This project builds on `01-topic-basic` and demonstrates more realistic Pub/Sub
 features: **durable subscriptions**, **message selectors**, and **concurrent subscribers**
 running side-by-side. Everything runs in Docker — no local Java, Maven, or ActiveMQ
 installation required.
 
-> **Recommended order:** complete `01-pubsub-basic` first. This project assumes you
+> **Recommended order:** complete `01-topic-basic` first. This project assumes you
 > already understand the basic Topic / Pub/Sub model.
 
 ---
@@ -61,7 +61,7 @@ installation required.
 ## Project structure
 
 ```
-02-pubsub-advanced/
+02-topic-advanced/
 ├── pom.xml                          ← Parent POM (multi-module)
 ├── docker-compose.yml               ← Orchestrates all services
 │
@@ -96,7 +96,7 @@ installation required.
 ### Run everything
 
 ```bash
-# From the 02-pubsub-advanced directory
+# From the 02-topic-advanced directory
 docker compose up --build
 ```
 
@@ -302,7 +302,7 @@ Three publisher instances will all publish to the same topic simultaneously.
 docker run -p 61616:61616 -p 8161:8161 apache/activemq-classic:5.18.3
 
 # Terminal 2 – build all modules
-cd 02-pubsub-advanced
+cd 02-topic-advanced
 mvn package -DskipTests
 
 # Terminal 3 – start subscriber first (so the durable subscription is
